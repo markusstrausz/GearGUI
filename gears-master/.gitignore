@@ -1,0 +1,5 @@
+*.geany
+*.out
+.env
+.cache
+__pycache__
