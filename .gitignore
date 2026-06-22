@@ -1,0 +1,5 @@
+# Ignore temporary files and build artifacts
+tmp_*.png
+*.scad
+build/
+gears-master/
