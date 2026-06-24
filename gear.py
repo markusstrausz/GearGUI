@@ -7,8 +7,6 @@ import shutil
 import configparser
 import threading
 import math
-import webbrowser
-import struct
 from typing import Any, Callable
 
 from gear_math import (
@@ -315,82 +313,31 @@ def _parse_dxf_entities_to_segments(dxf_text: str) -> list[list[tuple[float, flo
     return segments
 
 
-def _read_stl_vertices(stl_path: str) -> list[tuple[float, float, float]]:
-    """Read STL vertices from binary or ASCII STL without external dependencies."""
-    file_size = os.path.getsize(stl_path)
-    vertices: list[tuple[float, float, float]] = []
-
-    with open(stl_path, "rb") as f:
-        header = f.read(84)
-
-    is_binary = False
-    if len(header) >= 84:
-        tri_count = struct.unpack("<I", header[80:84])[0]
-        expected_size = 84 + (tri_count * 50)
-        is_binary = expected_size == file_size
-
-    if is_binary:
-        with open(stl_path, "rb") as f:
-            f.seek(80)
-            tri_count = struct.unpack("<I", f.read(4))[0]
-            for _ in range(tri_count):
-                chunk = f.read(50)
-                if len(chunk) < 50:
-                    break
-                data = struct.unpack("<12fH", chunk)
-                vertices.append((data[3], data[4], data[5]))
-                vertices.append((data[6], data[7], data[8]))
-                vertices.append((data[9], data[10], data[11]))
-        return vertices
-
-    with open(stl_path, "r", encoding="utf-8", errors="ignore") as f:
-        for line in f:
-            stripped = line.strip()
-            if not stripped.lower().startswith("vertex "):
-                continue
-            parts = stripped.split()
-            if len(parts) < 4:
-                continue
-            try:
-                x = float(parts[1])
-                y = float(parts[2])
-                z = float(parts[3])
-                vertices.append((x, y, z))
-            except ValueError:
-                continue
-
-    return vertices
-
-
-def _write_xyz_points_txt(
-    output_path: str,
-    points: list[tuple[float, float, float]],
-    separator: str = ",",
-) -> None:
-    """Write unique xyz points, one line per point, no header."""
-    seen: set[str] = set()
-    with open(output_path, "w", encoding="utf-8") as out:
-        for x, y, z in points:
-            line = f"{x:.6f}{separator}{y:.6f}{separator}{z:.6f}"
-            if line in seen:
-                continue
-            seen.add(line)
-            out.write(line + "\n")
-
-
 def export_points_curve_txt(scad_code: str, output_path: str) -> None:
-    """Export SCAD geometry as XYZ point list TXT (x,y,z per line, no header)."""
-    temp_stl = os.path.join(os.path.dirname(__file__), "temp_export_points.stl")
+    """Export projected 2D geometry as point-curve TXT.
+
+    Output format is intentionally plain for CAD importers:
+    one point per line as "x;y".
+    """
+    temp_dxf = os.path.join(os.path.dirname(__file__), "temp_export_points.dxf")
     try:
-        export_with_openscad(scad_code, temp_stl)
-        points = _read_stl_vertices(temp_stl)
-        if not points:
-            raise RuntimeError("Keine Punkte aus STL extrahierbar.")
-        _write_xyz_points_txt(output_path, points, separator=",")
+        export_with_openscad(as_2d_projection_scad(scad_code), temp_dxf)
+        with open(temp_dxf, "r", encoding="utf-8", errors="ignore") as f:
+            dxf_text = f.read()
+        segments = _parse_dxf_entities_to_segments(dxf_text)
+        if not segments:
+            raise RuntimeError("Keine auswertbaren Kurvenpunkte im DXF gefunden.")
+
+        # For best compatibility pick the longest continuous curve first.
+        main_seg = max(segments, key=len)
+
+        with open(output_path, "w", encoding="utf-8") as out:
+            for x, y in main_seg:
+                out.write(f"{x:.6f};{y:.6f}\n")
     finally:
         try:
-            if os.path.exists(temp_stl):
-                os.remove(temp_stl)
+            if os.path.exists(temp_dxf):
+                os.remove(temp_dxf)
         except OSError:
             pass
 
@@ -957,7 +904,7 @@ class GearTabBase(ttk.Frame):
                 ("3MF", "*.3mf"),
                 ("OFF", "*.off"),
                 ("DXF (2D curves for DesignSpark)", "*.dxf"),
-                ("Punkteliste TXT (X,Y,Z)", "*.txt"),
+                ("Punktekurve TXT", "*.txt"),
                 ("Alle Dateien", "*.*"),
             ]
         )
@@ -965,7 +912,6 @@ class GearTabBase(ttk.Frame):
             return
 
         ext = os.path.splitext(filename)[1].lower()
-
         try:
             if ext in ("", ".scad"):
                 with open(filename, "w", encoding="utf-8") as f:
@@ -1837,7 +1783,6 @@ class GearGUI(tk.Tk):
         # Menü-Einträge aktualisieren
         self.file_menu.entryconfig(0, label=self.l.get_string("file_menu_exit"))
         self.help_menu.entryconfig(0, label=self.l.get_string("help_menu_about"))
-        self.help_menu.entryconfig(2, label=self.l.get_string("help_menu_donate"))
         self.language_menu.entryconfig(0, label=self.l.get_string("language_german"))
         self.language_menu.entryconfig(1, label=self.l.get_string("language_english"))
         self.language_menu.entryconfig(2, label=self.l.get_string("language_russian"))
@@ -1912,8 +1857,6 @@ class GearGUI(tk.Tk):
         
         self.help_menu = tk.Menu(self.menubar, tearoff=0)
         self.help_menu.add_command(label=self.l.get_string("help_menu_about"), command=self.show_about)
-        self.help_menu.add_separator()
-        self.help_menu.add_command(label=self.l.get_string("help_menu_donate"), command=self.open_donate)
         self.menubar.add_cascade(label="", menu=self.help_menu)
 
         self.language_menu = tk.Menu(self.menubar, tearoff=0)
@@ -1957,10 +1900,6 @@ class GearGUI(tk.Tk):
         y = self.winfo_rooty() + (self.winfo_height() - height) // 2
         about_win.geometry(f"+{x}+{y}")
         about_win.grab_set()
-
-    def open_donate(self):
-        # PayPal-Spendenlink für mastrix44@web.de
-        webbrowser.open("https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=mastrix44@web.de&item_name=Gear+Studio+Donation&currency_code=EUR")
 
     def _on_camera_param_change(self, event=None):
         """Triggered by sliders or mouse, with throttling."""

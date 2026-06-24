@@ -2,4 +2,8 @@
 tmp_*.png
 *.scad
 build/
+dist/
 gears-master/
+__pycache__/
+*.pyc
+config.ini
