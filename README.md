@@ -1,75 +1,76 @@
-# Zahnrad Studio
+﻿# Zahnrad Studio
 
-Zahnrad Studio ist eine lokale Python-Anwendung zur parametrischen Erzeugung von Zahnradern und Getriebekomponenten fuer OpenSCAD. Das Projekt richtet sich an Maker, Entwickler und Konstrukteure, die Zahnradgeometrien schnell konfigurieren, pruefen und als OpenSCAD-Modelle weiterverwenden moechten.
-
-## Projektbeschreibung
-
-Zahnrad Studio bietet eine Desktop-Oberflaeche fuer die schnelle Erstellung technischer Zahnradmodelle. Geometrien werden aus Eingabewerten wie Modul, Zahnzahl, Bohrung, Breite, Profilverschiebung und Eingriffswinkel berechnet und als OpenSCAD-Code ausgegeben.
-
-Die Anwendung kombiniert eine Tkinter-Oberflaeche mit Berechnungslogik fuer verschiedene Getriebearten. Dadurch lassen sich Varianten schnell vergleichen, visuell pruefen und fuer Prototyping, 3D-Druck oder weitere OpenSCAD-Workflows vorbereiten.
-
-## Funktionsumfang
-
-- Erzeugung von Stirnraedern, Herringbone-Raedern, Zahnstangen, Schnecken, Wurmraedern, Innenzahnraedern, Planetengetrieben und Tellerradpaaren
-- Parametrische Eingabe fuer Geometrie, Bohrungen, Winkel, Breiten und Montagevarianten
-- Integrierte Vorschau mit Kamera-Steuerung
-- Export der Modelle fuer OpenSCAD und Weitergabe an eine lokale OpenSCAD-Installation
-- Mehrsprachige Oberflaeche ueber [lang.ini](lang.ini)
-
-## Technik
-
-- Python-Anwendung mit Tkinter-Oberflaeche
-- Berechnungslogik in [gear_math.py](gear_math.py)
-- Hauptanwendung in [gear.py](gear.py)
-- Tests in [tests](tests)
-- OpenSCAD-Bibliotheken ueber [gears-master](gears-master) und [BOSL2-master](BOSL2-master)
-
-## Anwendung
+Ein benutzerfreundliches grafisches Tool zum Erstellen von Zahnrädern und Getrieben für **OpenSCAD**. Perfekt für Maker, 3D-Druck-Enthusiasten und Ingenieure.
 
 ![Zahnrad Studio GUI](Bilder/GUI.png)
 
-## Beispielbilder
+## ✨ Features
 
-### Stirnradpaar
+- **Unterstützte Zahnrad-Typen:**
+  - Stirnrad (Spur Gear)
+  - Herringbone (Doppel-Schrägverzahnung)
+  - Zahnstange + Ritzel (Rack & Pinion)
+  - Schnecke + Schneckenrad (Worm Gear)
+  - Hohlrad (Ring Gear)
+  - Planetengetriebe (Planetary Gear Set)
+  - Kegelrad (Bevel Gear)
 
-![Stirnradpaar](Bilder/ScStirnradpaar.png)
+- **Echtzeit-Vorschau** mit Kamera-Steuerung und Animation
+- **Automatische Berechnung** von Achsabständen, Übersetzungsverhältnissen und Montagebedingungen
+- **Mehrsprachig**: Deutsch, Englisch, Russisch
+- **Export** als `.scad`, `.stl`, `.dxf` und mehr
+- **Direktes Öffnen** in OpenSCAD
+- **Fertige EXE** für Windows (keine Python-Installation nötig)
 
-### Herringbone
+## 📸 Screenshots
 
-![Herringbone](Bilder/Herringbone.png)
+| Stirnradpaar | Herringbone |
+|:---:|:---:|
+| ![Stirnradpaar](Bilder/ScStirnradpaar.png) | ![Herringbone](Bilder/Herringbone.png) |
 
-### Zahnstange
+| Zahnstange | Wurmrad |
+|:---:|:---:|
+| ![Zahnstange](Bilder/Zahnstange.png) | ![Wurmrad](Bilder/Wurmrad.png) |
 
-![Zahnstange](Bilder/Zahnstange.png)
+| Innenzahnrad | Planetengetriebe |
+|:---:|:---:|
+| ![Innenzahnrad](Bilder/Innenzahnrad.png) | ![Planetengetriebe](Bilder/Planetemgetriebe.png) |
 
-### Wurmrad
+| Tellerrad | |
+|:---:|:---:|
+| ![Tellerrad](Bilder/Tellerrad.png) | |
 
-![Wurmrad](Bilder/Wurmrad.png)
+## 🚀 Schnellstart
 
-### Innenzahnrad
+### Voraussetzungen
 
-![Innenzahnrad](Bilder/Innenzahnrad.png)
+- **OpenSCAD** installiert ([Download](https://openscad.org/downloads.html))
+- Python 3.10 oder neuer (nur für den Skript-Modus)
+- Optional: `gears.scad` Bibliothek von [chrisspen/gears](https://github.com/chrisspen/gears)
 
-### Planetengetriebe
+### Verwendung
 
-![Planetengetriebe](Bilder/Planetemgetriebe.png)
+#### Als fertige EXE (empfohlen für Windows)
 
-### Tellerrad
+Im Ordner `dist/` liegt eine vorkompilierte `gear.exe`, die direkt ohne Python-Installation gestartet werden kann.
 
-![Tellerrad](Bilder/Tellerrad.png)
+#### Als Python-Skript
 
-## Voraussetzungen
+```bash
+python gear.py
+```
 
-- Python 3.10 oder neuer
-- OpenSCAD fuer Vorschau, Export und das direkte Oeffnen erzeugter Modelle
-- Eine Python-Umgebung mit verfuegbarem Tkinter
+Für Vorschau, Export und das direkte Öffnen der Modelle sollte OpenSCAD installiert und im System erreichbar sein.
 
-## Start
+## 🔧 Technik
 
-Die Anwendung laesst sich lokal mit `python gear.py` starten. Fuer Vorschau, Export und das direkte Oeffnen der Modelle sollte OpenSCAD installiert und erreichbar sein.
+- Python-Anwendung mit Tkinter-Oberfläche
+- Berechnungslogik in [gear_math.py](gear_math.py)
+- Hauptanwendung in [gear.py](gear.py)
+- Tests in [tests/](tests/)
+- OpenSCAD-Bibliotheken über [gears-master/](gears-master/) und [BOSL2-master/](BOSL2-master/)
+- EXE-Erstellung mit PyInstaller über `make_exe.bat`
 
-Alternativ steht im Ordner `dist/` eine vorkompilierte `gear.exe` bereit, die ohne Python-Installation direkt gestartet werden kann. Die EXE wird mit PyInstaller ueber `make_exe.bat` erzeugt.
+## 🧪 Entwicklung
 
-## Entwicklung
-
-Fuer die Codepflege sind in [requirements-dev.txt](requirements-dev.txt) Werkzeuge wie Black und Ruff hinterlegt. Mit [smoke_test.py](smoke_test.py) sowie den Tests in [tests](tests) stehen zudem einfache Pruefpfade fuer Berechnungen und Regressionen bereit.
+Für die Codepflege sind in [requirements-dev.txt](requirements-dev.txt) Werkzeuge wie **Black** und **Ruff** hinterlegt. Mit [smoke_test.py](smoke_test.py) sowie den Tests in [tests/](tests/) stehen einfache Prüfpfade für Berechnungen und Regressionen bereit.
